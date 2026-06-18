@@ -5,7 +5,7 @@ class Node:
     def __init__(self, key: Any, value: Any, h: int) -> None:
         self.key = key
         self.value = value
-        self.hash = h  # Hash armazenado e imutável após a criação
+        self.hash = h  # Hash armazenado para evitar recálculos
 
 
 class Dictionary:
@@ -15,6 +15,10 @@ class Dictionary:
         self.size: int = 0
         self.table: list[list[Node]] = [[] for _ in range(self.capacity)]
 
+    def _hash(self, h: int) -> int:
+        """Calcula o índice para um hash fornecido."""
+        return h % self.capacity
+
     def _resize(self) -> None:
         old_table = self.table
         self.capacity *= 2
@@ -23,7 +27,8 @@ class Dictionary:
 
         for bucket in old_table:
             for node in bucket:
-                index = node.hash % self.capacity
+                # Reutiliza o hash armazenado no Node para realocar
+                index = self._hash(node.hash)
                 self.table[index].append(node)
                 self.size += 1
 
@@ -32,7 +37,7 @@ class Dictionary:
             self._resize()
 
         h = hash(key)
-        index = h % self.capacity
+        index = self._hash(h)
         bucket = self.table[index]
 
         for node in bucket:
@@ -40,20 +45,22 @@ class Dictionary:
                 node.value = value
                 return
 
+        # O hash é calculado uma única vez e armazenado no Node
         bucket.append(Node(key, value, h))
         self.size += 1
 
     def __getitem__(self, key: Any) -> Any:
         h = hash(key)
-        index = h % self.capacity
+        index = self._hash(h)
         for node in self.table[index]:
+            # Usa o hash armazenado para filtrar antes de checar a chave
             if node.hash == h and node.key == key:
                 return node.value
         raise KeyError(f"Key '{key}' not found.")
 
     def __delitem__(self, key: Any) -> None:
         h = hash(key)
-        index = h % self.capacity
+        index = self._hash(h)
         bucket = self.table[index]
         for i, node in enumerate(bucket):
             if node.hash == h and node.key == key:
