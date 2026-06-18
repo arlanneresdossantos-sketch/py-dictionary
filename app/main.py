@@ -5,7 +5,7 @@ class Node:
     def __init__(self, key: Any, value: Any, h: int) -> None:
         self.key = key
         self.value = value
-        self.hash = h  # Hash armazenado para evitar recálculos
+        self.hash = h
 
 
 class Dictionary:
@@ -16,7 +16,6 @@ class Dictionary:
         self.table: list[list[Node]] = [[] for _ in range(self.capacity)]
 
     def _hash(self, h: int) -> int:
-        """Calcula o índice para um hash fornecido."""
         return h % self.capacity
 
     def _resize(self) -> None:
@@ -27,7 +26,6 @@ class Dictionary:
 
         for bucket in old_table:
             for node in bucket:
-                # Reutiliza o hash armazenado no Node para realocar
                 index = self._hash(node.hash)
                 self.table[index].append(node)
                 self.size += 1
@@ -45,7 +43,6 @@ class Dictionary:
                 node.value = value
                 return
 
-        # O hash é calculado uma única vez e armazenado no Node
         bucket.append(Node(key, value, h))
         self.size += 1
 
@@ -53,7 +50,6 @@ class Dictionary:
         h = hash(key)
         index = self._hash(h)
         for node in self.table[index]:
-            # Usa o hash armazenado para filtrar antes de checar a chave
             if node.hash == h and node.key == key:
                 return node.value
         raise KeyError(f"Key '{key}' not found.")
