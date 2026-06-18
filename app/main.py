@@ -2,10 +2,10 @@ from typing import Any
 
 
 class Node:
-    def __init__(self, key: Any, value: Any) -> None:
+    def __init__(self, key: Any, value: Any, h: int) -> None:
         self.key = key
         self.value = value
-        self.hash = hash(key)
+        self.hash = h  # Hash armazenado e imutável após a criação
 
 
 class Dictionary:
@@ -15,9 +15,6 @@ class Dictionary:
         self.size: int = 0
         self.table: list[list[Node]] = [[] for _ in range(self.capacity)]
 
-    def _hash(self, key: Any) -> int:
-        return hash(key) % self.capacity
-
     def _resize(self) -> None:
         old_table = self.table
         self.capacity *= 2
@@ -26,8 +23,7 @@ class Dictionary:
 
         for bucket in old_table:
             for node in bucket:
-                # Usa self._hash para consistência no novo índice
-                index = self._hash(node.key)
+                index = node.hash % self.capacity
                 self.table[index].append(node)
                 self.size += 1
 
@@ -35,7 +31,8 @@ class Dictionary:
         if self.size / self.capacity >= self.load_factor:
             self._resize()
 
-        index = self._hash(key)
+        h = hash(key)
+        index = h % self.capacity
         bucket = self.table[index]
 
         for node in bucket:
@@ -43,21 +40,23 @@ class Dictionary:
                 node.value = value
                 return
 
-        bucket.append(Node(key, value))
+        bucket.append(Node(key, value, h))
         self.size += 1
 
     def __getitem__(self, key: Any) -> Any:
-        index = self._hash(key)
+        h = hash(key)
+        index = h % self.capacity
         for node in self.table[index]:
-            if node.key == key:
+            if node.hash == h and node.key == key:
                 return node.value
         raise KeyError(f"Key '{key}' not found.")
 
     def __delitem__(self, key: Any) -> None:
-        index = self._hash(key)
+        h = hash(key)
+        index = h % self.capacity
         bucket = self.table[index]
         for i, node in enumerate(bucket):
-            if node.key == key:
+            if node.hash == h and node.key == key:
                 del bucket[i]
                 self.size -= 1
                 return
