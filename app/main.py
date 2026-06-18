@@ -5,7 +5,7 @@ class Node:
     def __init__(self, key: Any, value: Any, h: int) -> None:
         self.key = key
         self.value = value
-        self.hash = h
+        self.hash = h  # O hash é armazenado na criação e nunca recalculado
 
 
 class Dictionary:
@@ -15,7 +15,7 @@ class Dictionary:
         self.size: int = 0
         self.table: list[list[Node]] = [[] for _ in range(self.capacity)]
 
-    def _hash(self, h: int) -> int:
+    def _get_index(self, h: int) -> int:
         return h % self.capacity
 
     def _resize(self) -> None:
@@ -26,7 +26,7 @@ class Dictionary:
 
         for bucket in old_table:
             for node in bucket:
-                index = self._hash(node.hash)
+                index = self._get_index(node.hash)
                 self.table[index].append(node)
                 self.size += 1
 
@@ -35,11 +35,11 @@ class Dictionary:
             self._resize()
 
         h = hash(key)
-        index = self._hash(h)
+        index = self._get_index(h)
         bucket = self.table[index]
 
         for node in bucket:
-            if node.key == key:
+            if node.hash == h and node.key == key:
                 node.value = value
                 return
 
@@ -48,7 +48,7 @@ class Dictionary:
 
     def __getitem__(self, key: Any) -> Any:
         h = hash(key)
-        index = self._hash(h)
+        index = self._get_index(h)
         for node in self.table[index]:
             if node.hash == h and node.key == key:
                 return node.value
@@ -56,7 +56,7 @@ class Dictionary:
 
     def __delitem__(self, key: Any) -> None:
         h = hash(key)
-        index = self._hash(h)
+        index = self._get_index(h)
         bucket = self.table[index]
         for i, node in enumerate(bucket):
             if node.hash == h and node.key == key:
