@@ -23,21 +23,27 @@ class Dictionary:
         self.capacity *= 2
         self.table = [[] for _ in range(self.capacity)]
         self.size = 0
+
         for bucket in old_table:
             for node in bucket:
-                index = hash(node.key) % self.capacity
+                # Usa self._hash para consistência no novo índice
+                index = self._hash(node.key)
                 self.table[index].append(node)
                 self.size += 1
 
     def __setitem__(self, key: Any, value: Any) -> None:
         if self.size / self.capacity >= self.load_factor:
             self._resize()
+
         index = self._hash(key)
-        for node in self.table[index]:
+        bucket = self.table[index]
+
+        for node in bucket:
             if node.key == key:
                 node.value = value
                 return
-        self.table[index].append(Node(key, value))
+
+        bucket.append(Node(key, value))
         self.size += 1
 
     def __getitem__(self, key: Any) -> Any:
@@ -49,9 +55,10 @@ class Dictionary:
 
     def __delitem__(self, key: Any) -> None:
         index = self._hash(key)
-        for i, node in enumerate(self.table[index]):
+        bucket = self.table[index]
+        for i, node in enumerate(bucket):
             if node.key == key:
-                del self.table[index][i]
+                del bucket[i]
                 self.size -= 1
                 return
         raise KeyError(f"Key '{key}' not found.")
